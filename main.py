@@ -3,7 +3,7 @@ import json
 import smtplib
 import threading
 import os
-
+import configparser
 import hashlib
 import urllib.request
 import shutil
@@ -47,6 +47,16 @@ class TaskThread(threading.Thread):
 
         self.state = task_states[2]
 
+    def load_config(self):
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+
+        sender_mail = config.get("Settings", "email")
+        sender_pass = config.get("Settings", "password")
+
+        return sender_mail, sender_pass
+
+
     def download_file(self, url):
         try:
             if not os.path.exists("download\\"):
@@ -60,14 +70,14 @@ class TaskThread(threading.Thread):
 
     def calc_hash(self, file):
         try:
-            BUF_SIZE = 65536
+            buf_size = 65536
 
             md5 = hashlib.md5()
             print(str(file))
 
             with open(str(file), 'rb') as f:
                 while True:
-                    data = f.read(BUF_SIZE)
+                    data = f.read(buf_size)
                     if not data:
                         break
                     md5.update(data)
@@ -75,11 +85,12 @@ class TaskThread(threading.Thread):
         except:
             return None
 
+
     def send_email(self, email, url, hash):
         try:
-            addr_from = "t4sktest@gmail.com"
+            addr_from, password = self.load_config()
             addr_to = str(email)
-            password = "russia11C"
+
 
             msg = MIMEMultipart()
             msg['From'] = addr_from
@@ -176,4 +187,4 @@ def get():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
